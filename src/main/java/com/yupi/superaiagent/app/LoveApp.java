@@ -1,6 +1,7 @@
 package com.yupi.superaiagent.app;
 
 import com.yupi.superaiagent.advisor.MyLoggerAdvisor;
+import com.yupi.superaiagent.advisor.ReReadingAdvisor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -35,6 +36,8 @@ public class LoveApp {
                         new MessageChatMemoryAdvisor(chatMemory),
                         // 自定义拦截器，按需开启
                         new MyLoggerAdvisor()
+                        // 自定义拦截器，按需开启
+//                       , new ReReadingAdvisor()
                 )
                 .build();
     }
