@@ -2,6 +2,7 @@ package com.yupi.superaiagent.app;
 
 import com.yupi.superaiagent.advisor.MyLoggerAdvisor;
 import com.yupi.superaiagent.advisor.ReReadingAdvisor;
+import com.yupi.superaiagent.chatmemory.FileBasedChatMemory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -31,7 +32,9 @@ public class LoveApp {
 
     public LoveApp(ChatModel dashscopeChatModel) {
         // 初始化基于内存的对话记忆
-        ChatMemory chatMemory = new InMemoryChatMemory();
+//        ChatMemory chatMemory = new InMemoryChatMemory();
+        String fileDir = System.getProperty("user.dir") + "/tmp/chat-memory";
+        ChatMemory chatMemory = new FileBasedChatMemory(fileDir);
         chatClient = ChatClient.builder(dashscopeChatModel)
                 .defaultSystem(SYSTEM_PROMPT)
                 .defaultAdvisors(
