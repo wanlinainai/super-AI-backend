@@ -22,7 +22,7 @@ public class ReReadingAdvisor implements CallAroundAdvisor, StreamAroundAdvisor 
         advisedUserParams.put("re2_input_query", advisedRequest.userText());
 
         return AdvisedRequest.from(advisedRequest)
-                .userText("""
+                .userText("""   
 			    {re2_input_query}
 			    Read the question again: {re2_input_query}
 			    """)
