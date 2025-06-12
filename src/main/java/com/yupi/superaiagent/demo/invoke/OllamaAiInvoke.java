@@ -20,9 +20,9 @@ public class OllamaAiInvoke implements CommandLineRunner {
     private ChatModel ollamaChatModel;
     @Override
     public void run(String... args) throws Exception {
-        AssistantMessage output = ollamaChatModel.call(new Prompt("你好，我是李白，请帮我生成一段诗歌，必须是七言绝句"))
-                .getResult()
-                .getOutput();
-        System.out.println(output.getText());
+//        AssistantMessage output = ollamaChatModel.call(new Prompt("你好，我是李白，请帮我生成一段诗歌，必须是七言绝句"))
+//                .getResult()
+//                .getOutput();
+//        System.out.println(output.getText());
     }
 }
