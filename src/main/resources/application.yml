@@ -8,7 +8,14 @@ spring:
       base-url: http://localhost:11434
       chat:
         model: deepseek-r1:1.5b
-
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        # 在不确定向量维度的情况下，建议不要指定dimensions的值，未指定的话会从提供的EmbeddingModel中检索维度，维度在表创建的时候设置成嵌入列。如果更改维度，需要重新创建
+        # Vector_store表
+        dimensions: 1536
+        distance-type: COSINE_DISTANCE
+        max-document-batch-size: 10000
 server:
   port: 8123
   servlet:

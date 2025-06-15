@@ -1,5 +1,6 @@
 package com.yupi.superaiagent.app;
 
+import com.alibaba.cloud.ai.dashscope.rag.DashScopeCloudStore;
 import com.fasterxml.jackson.databind.util.PrimitiveArrayBuilder;
 import com.yupi.superaiagent.advisor.MyLoggerAdvisor;
 import com.yupi.superaiagent.advisor.ReReadingAdvisor;
@@ -13,6 +14,11 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.document.DefaultContentFormatter;
+import org.springframework.ai.document.DocumentReader;
+import org.springframework.ai.document.MetadataMode;
+import org.springframework.ai.transformer.SummaryMetadataEnricher;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 
@@ -53,8 +59,8 @@ public class LoveApp {
                 )
                 .build();
     }
-
     public String doChat(String message, String chatId) {
+
         ChatResponse response = chatClient
                 .prompt()
                 .user(message)
@@ -87,6 +93,20 @@ public class LoveApp {
                 .entity(LoveReport.class);
 
         log.info("content: {}", loveReport);
+
+        // Builder创建实例
+        DefaultContentFormatter formatter = DefaultContentFormatter.builder()
+                .withMetadataSeparator("\n")
+                .withMetadataTemplate("{key}：{value}")
+                .withTextTemplate("{metadata_string}\n\n{content}")
+                .withExcludedInferenceMetadataKeys("embedding", "vector_id")
+                .withExcludedEmbedMetadataKeys("source_url", "timestamp")
+                .build();
+
+        // 使用格式化器处理文档
+//        formatter.format(document, MetadataMode.INFERENCE);
+
+//        loveAppVectorStore.write();
         return loveReport;
     }
 
@@ -99,6 +119,7 @@ public class LoveApp {
                 .advisors(new QuestionAnswerAdvisor(loveAppVectorStore))
                 .call()
                 .chatResponse();
+
 
         String content = chatResponse.getResult().getOutput().getText();
         log.info("content: {}", content);
