@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.util.PrimitiveArrayBuilder;
 import com.yupi.superaiagent.advisor.MyLoggerAdvisor;
 import com.yupi.superaiagent.advisor.ReReadingAdvisor;
 import com.yupi.superaiagent.chatmemory.FileBasedChatMemory;
+import com.yupi.superaiagent.rag.LoveAppRagCustomAdvisorFactory;
+import com.yupi.superaiagent.rag.rewriteQueryTransformer.MyRewriteQueryTransformer;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -43,6 +45,9 @@ public class LoveApp {
     @Resource
     private VectorStore loveAppVectorStore;
 
+    @Resource
+    private MyRewriteQueryTransformer queryTransformer;
+
     public LoveApp(ChatModel dashscopeChatModel) {
         // 初始化基于内存的对话记忆
 //        ChatMemory chatMemory = new InMemoryChatMemory();
@@ -60,7 +65,6 @@ public class LoveApp {
                 .build();
     }
     public String doChat(String message, String chatId) {
-
         ChatResponse response = chatClient
                 .prompt()
                 .user(message)
@@ -111,18 +115,31 @@ public class LoveApp {
     }
 
     public String doChatWithRAG(String message, String chatId) {
-        ChatResponse chatResponse = chatClient.prompt()
-                .user(message)
-                .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
-                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
-                .advisors(new MyLoggerAdvisor())
-                .advisors(new QuestionAnswerAdvisor(loveAppVectorStore))
+//        ChatResponse chatResponse = chatClient.prompt()
+//                .user(message)
+//                .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
+//                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+//                .advisors(new MyLoggerAdvisor())
+//                .advisors(new QuestionAnswerAdvisor(loveAppVectorStore))
+//                .call()
+//                .chatResponse();
+//
+//
+//        String content = chatResponse.getResult().getOutput().getText();
+//        log.info("content: {}", content);
+//        return content;
+        // todo  查询重写器
+        String rewriteMessage = queryTransformer.doQueryRewrite(message);
+        ChatResponse chatResponse = chatClient
+                .prompt()
+                .user(rewriteMessage)
+                .advisors(LoveAppRagCustomAdvisorFactory.createLoveAppRagCustomAdvisor(
+                        loveAppVectorStore, "已婚"
+                ))
                 .call()
                 .chatResponse();
 
-
         String content = chatResponse.getResult().getOutput().getText();
-        log.info("content: {}", content);
         return content;
     }
 }

@@ -28,19 +28,20 @@ public class PgVectorVectorStoreConfig {
 
     @Bean
     public VectorStore pgVectorVectorStore(JdbcTemplate jdbcTemplate, EmbeddingModel dashscopeEmbeddingModel) {
-        VectorStore vectorStore = PgVectorStore.builder(jdbcTemplate, dashscopeEmbeddingModel)
-                .dimensions(1536)
-                .distanceType(COSINE_DISTANCE)
-                .indexType(HNSW)
-                .initializeSchema(true)
-                .schemaName("public")
-                .vectorTableName("vector_store")
-                .maxDocumentBatchSize(10000)
-                .build();
-
-        // 加载文档
-        List<Document> documents = loveAppDocumentLoader.loadMarkdowns();
-        vectorStore.add(documents);
-        return vectorStore;
+        return null;
+//        VectorStore vectorStore = PgVectorStore.builder(jdbcTemplate, dashscopeEmbeddingModel)
+//                .dimensions(1536)
+//                .distanceType(COSINE_DISTANCE)
+//                .indexType(HNSW)
+//                .initializeSchema(true)
+//                .schemaName("public")
+//                .vectorTableName("vector_store")
+//                .maxDocumentBatchSize(10000)
+//                .build();
+//
+//        // 加载文档
+//        List<Document> documents = loveAppDocumentLoader.loadMarkdowns();
+//        vectorStore.add(documents);
+//        return vectorStore;
     }
 }

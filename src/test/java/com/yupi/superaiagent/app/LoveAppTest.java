@@ -1,5 +1,6 @@
 package com.yupi.superaiagent.app;
 
+import com.yupi.superaiagent.rag.rewriteQueryTransformer.MyRewriteQueryTransformer;
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,9 @@ class LoveAppTest {
 
     @Resource
     private LoveApp loveApp;
+
+    @Resource
+    private MyRewriteQueryTransformer queryTransformer;
     @Test
     void doChat() {
         String chatId = UUID.randomUUID().toString();
