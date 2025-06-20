@@ -12,19 +12,36 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
+import org.springframework.ai.chat.client.advisor.RetrievalAugmentationAdvisor;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.document.DefaultContentFormatter;
+import org.springframework.ai.document.Document;
 import org.springframework.ai.document.DocumentReader;
 import org.springframework.ai.document.MetadataMode;
+import org.springframework.ai.rag.Query;
+import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugmenter;
+import org.springframework.ai.rag.generation.augmentation.QueryAugmenter;
+import org.springframework.ai.rag.preretrieval.query.expansion.MultiQueryExpander;
+import org.springframework.ai.rag.preretrieval.query.transformation.CompressionQueryTransformer;
+import org.springframework.ai.rag.preretrieval.query.transformation.RewriteQueryTransformer;
+import org.springframework.ai.rag.preretrieval.query.transformation.TranslationQueryTransformer;
+import org.springframework.ai.rag.retrieval.join.ConcatenationDocumentJoiner;
+import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
+import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.transformer.SummaryMetadataEnricher;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_RETRIEVE_SIZE_KEY;
@@ -44,13 +61,15 @@ public class LoveApp {
 
     @Resource
     private VectorStore loveAppVectorStore;
+    @Autowired
+    private ChatClient.Builder chatClientBuilder;
 
     @Resource
     private MyRewriteQueryTransformer queryTransformer;
 
-    public LoveApp(ChatModel dashscopeChatModel) {
+    public LoveApp(@Qualifier("dashscopeChatModel") ChatModel dashscopeChatModel) {
         // 初始化基于内存的对话记忆
-//        ChatMemory chatMemory = new InMemoryChatMemory();
+        // ChatMemory chatMemory = new InMemoryChatMemory();
         String fileDir = System.getProperty("user.dir") + "/tmp/chat-memory";
         ChatMemory chatMemory = new FileBasedChatMemory(fileDir);
         chatClient = ChatClient.builder(dashscopeChatModel)
@@ -60,11 +79,12 @@ public class LoveApp {
                         // 自定义拦截器，按需开启
                         new MyLoggerAdvisor()
                         // 自定义拦截器，按需开启
-//                       , new ReReadingAdvisor()
+                        // , new ReReadingAdvisor()
                 )
                 .build();
     }
-    public String doChat(String message, String chatId) {
+
+    public String doChat (String message, String chatId){
         ChatResponse response = chatClient
                 .prompt()
                 .user(message)
@@ -78,15 +98,17 @@ public class LoveApp {
         return content;
     }
 
-    record LoveReport(String title, List<String> suggestions){}
+    record LoveReport(String title, List<String> suggestions) {
+    }
 
     /**
      * Ai 恋爱报告功能（结构化输出）
+     *
      * @param message
      * @param chatId
      * @return
      */
-    public LoveReport doChatWithReport(String message, String chatId) {
+    public LoveReport doChatWithReport (String message, String chatId){
         LoveReport loveReport = chatClient
                 .prompt()
                 .system(SYSTEM_PROMPT + "每一次对话生成都要生成恋爱结果，标题是{用户名}的恋爱报告，内容为建议列表")
@@ -108,13 +130,54 @@ public class LoveApp {
                 .build();
 
         // 使用格式化器处理文档
-//        formatter.format(document, MetadataMode.INFERENCE);
+        // formatter.format(document, MetadataMode.INFERENCE);
 
-//        loveAppVectorStore.write();
+        // loveAppVectorStore.write();
         return loveReport;
     }
 
-    public String doChatWithRAG(String message, String chatId) {
+    public String doChatWithRAG (String message, String chatId){
+        // ChatResponse chatResponse = chatClient.prompt()
+        // .user(message)
+        // .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
+        // .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+        // .advisors(new MyLoggerAdvisor())
+        // .advisors(new QuestionAnswerAdvisor(loveAppVectorStore))
+        // .call()
+        // .chatResponse();
+        //
+        // String content = chatResponse.getResult().getOutput().getText();
+
+        // todo 待删除
+        // DocumentRetriever retriever = VectorStoreDocumentRetriever.builder()
+        // .vectorStore(vectorStore)
+        // .similarityThreshold(0.7)
+        // .topK(5)
+        // .filterExpression(new FilterExpressionBuilder()
+        // .eq("type", "web")
+        // .build())
+        // .build();
+        // // ToDo 待删除
+        // Query.builder()
+        // .text("谁是Trump?")
+        // .context(Map.of(VectorStoreDocumentRetriever.FILTER_EXPRESSION, "type ==
+        // 'boy'"))
+        // .build();
+        // new ConcatenationDocumentJoiner()
+        // List<Document> documents = retriever.retrieve(new Query("谁是唐朝李白"));
+
+        // ToDo 待删除
+//        Advisor retrivalAugmentationAdvisor = RetrievalAugmentationAdvisor.builder()
+//                .documentRetriever(VectorStoreDocumentRetriever.builder()
+//                        .similarityThreshold(0.5)
+//                        .vectorStore(loveAppVectorStore)
+//                        .build())
+//                .build();
+//        String answer = chatClient.prompt()
+//                .advisors(retrivalAugmentationAdvisor)
+//                .user("你好")
+//                .call()
+//                .content();
 //        ChatResponse chatResponse = chatClient.prompt()
 //                .user(message)
 //                .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
@@ -133,13 +196,32 @@ public class LoveApp {
         ChatResponse chatResponse = chatClient
                 .prompt()
                 .user(rewriteMessage)
+                .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
+                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+                .advisors(new MyLoggerAdvisor())
+                .advisors(new QuestionAnswerAdvisor(loveAppVectorStore))
                 .advisors(LoveAppRagCustomAdvisorFactory.createLoveAppRagCustomAdvisor(
                         loveAppVectorStore, "已婚"
                 ))
                 .call()
                 .chatResponse();
-
         String content = chatResponse.getResult().getOutput().getText();
+        log.info("content:{}", content);
+        // todo 待删除
+//        RetrievalAugmentationAdvisor build = RetrievalAugmentationAdvisor.builder()
+//                .queryTransformers(RewriteQueryTransformer.builder()
+//                        .chatClientBuilder(chatClientBuilder.build().mutate())
+//                        .build())
+//                .documentRetriever(VectorStoreDocumentRetriever.builder()
+//                        .similarityThreshold(0.5)
+//                        .vectorStore(loveAppVectorStore)
+//                        .build())
+//                .build();
+//
+//        log.info("content: {}", answer);
+//        return answer;
+
+
         return content;
     }
 }

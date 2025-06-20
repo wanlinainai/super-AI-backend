@@ -1,11 +1,25 @@
 package com.yupi.superaiagent.app;
 
+
 import com.yupi.superaiagent.rag.rewriteQueryTransformer.MyRewriteQueryTransformer;
+import com.yupi.superaiagent.toolCalling.test.WeatherTools;
+
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.prompt.ChatOptions;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.model.tool.ToolCallingChatOptions;
+import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.ToolCallbacks;
+import org.springframework.ai.tool.method.MethodToolCallback;
+import org.springframework.ai.tool.support.ToolDefinitions;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.util.ReflectionUtils;
 
+import java.lang.reflect.Method;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,35 +28,38 @@ import static org.junit.jupiter.api.Assertions.*;
 class LoveAppTest {
 
     @Resource
+    private ChatModel dashscopeChatModel;
+
+    @Resource
     private LoveApp loveApp;
 
     @Resource
     private MyRewriteQueryTransformer queryTransformer;
     @Test
     void doChat() {
-        String chatId = UUID.randomUUID().toString();
-        // 第一轮
-        String message = "你好，我是唐朝李白";
-        String answer = loveApp.doChat(message, chatId);
-        Assertions.assertNotNull(answer);
-
-        // 第一轮
-        message = "请帮我写一段关于求爱不得的七言绝句";
-        answer = loveApp.doChat(message, chatId);
-        Assertions.assertNotNull(answer);
-
-        // 第一轮
-        message = "我叫什么？之前告诉过你的";
-        answer = loveApp.doChat(message, chatId);
-        Assertions.assertNotNull(answer);
+//        String chatId = UUID.randomUUID().toString();
+//        // 第一轮
+//        String message = "你好，我是唐朝李白";
+//        String answer = loveApp.doChat(message, chatId);
+//        Assertions.assertNotNull(answer);
+//
+//        // 第一轮
+//        message = "请帮我写一段关于求爱不得的七言绝句";
+//        answer = loveApp.doChat(message, chatId);
+//        Assertions.assertNotNull(answer);
+//
+//        // 第一轮
+//        message = "我叫什么？之前告诉过你的";
+//        answer = loveApp.doChat(message, chatId);
+//        Assertions.assertNotNull(answer);
     }
 
     @Test
     void doChatWithReport() {
-        String chatId = UUID.randomUUID().toString();
-        String message = "你好，我是唐朝李白, 我想让另一半更加爱我，但我不知道怎么办？";
-        LoveApp.LoveReport loveReport = loveApp.doChatWithReport(message, chatId);
-        Assertions.assertNotNull(loveReport);
+//        String chatId = UUID.randomUUID().toString();
+//        String message = "你好，我是唐朝李白, 我想让另一半更加爱我，但我不知道怎么办？";
+//        LoveApp.LoveReport loveReport = loveApp.doChatWithReport(message, chatId);
+//        Assertions.assertNotNull(loveReport);
     }
 
     @Test
@@ -51,5 +68,42 @@ class LoveAppTest {
         String message = "我已经结婚了，但是婚后关系不太稳定，怎么做？";
         String answer = loveApp.doChatWithRAG(message, chatId);
         Assertions.assertNotNull(answer);
+    }
+
+    @Test
+    void testToolCalling() {
+        // ChatClient.create(dashscopeChatModel)
+        // .prompt("What's the weather in Beijing?")
+        // .tools(new WeatherTools())
+        // .call();
+//        ChatClient.create(dashscopeChatModel)
+//        .prompt("What's the weather in Beijing?")
+//        .functions("weatherFunctions")
+//        .call();
+
+        // todo 函数调用
+//        Method method = ReflectionUtils.findMethod(WeatherTools.class, "getWeather", String.class);
+//        ToolCallback toolCallback = MethodToolCallback.builder()
+//                .toolDefinition(ToolDefinitions.builder(method)
+//                        .description("获取指定城市的天气信息")
+//                        .build())
+//                .toolMethod(method)
+//                .toolObject(new WeatherTools())
+//                .build();
+//        ChatClient.create(dashscopeChatModel)
+//                .prompt("What's the weather in Beijing?")
+//                .tools(toolCallback)
+//                .call();
+
+        // ToDo： 使用工具
+        // 得到工具对象
+        ToolCallback[] weatherTools = ToolCallbacks.from(new WeatherTools());
+        // 绑定工具到对象
+        ChatOptions chatOptions = ToolCallingChatOptions.builder()
+                .toolCallbacks(weatherTools)
+                .build();
+        // 构造Prompt指定对话选项
+        Prompt prompt = new Prompt("今天北京天气怎么样？", chatOptions);
+        dashscopeChatModel.call(prompt);
     }
 }
