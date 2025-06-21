@@ -33,6 +33,7 @@ import org.springframework.ai.rag.preretrieval.query.transformation.TranslationQ
 import org.springframework.ai.rag.retrieval.join.ConcatenationDocumentJoiner;
 import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
 import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.transformer.SummaryMetadataEnricher;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
@@ -61,8 +62,8 @@ public class LoveApp {
 
     @Resource
     private VectorStore loveAppVectorStore;
-    @Autowired
-    private ChatClient.Builder chatClientBuilder;
+//    @Autowired
+//    private ChatClient.Builder chatClientBuilder;
 
     @Resource
     private MyRewriteQueryTransformer queryTransformer;
@@ -222,6 +223,24 @@ public class LoveApp {
 //        return answer;
 
 
+        return content;
+    }
+
+    @Resource
+    private ToolCallback[] allTools;
+    public String doChatWithTools(String message, String chatId) {
+        ChatResponse response = chatClient
+                .prompt()
+                .user(message)
+                .advisors(spec -> spec.param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, chatId)
+                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+                // 开启日志
+                .advisors(new MyLoggerAdvisor())
+                .tools(allTools)
+                .call()
+                .chatResponse();
+        String content = response.getResult().getOutput().getText();
+        log.info("content: {}", content);
         return content;
     }
 }

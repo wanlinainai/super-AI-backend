@@ -15,14 +15,14 @@ import java.util.List;
  */
 @Component
 public class MyKeywordEnricher {
-    private final ChatModel chatModel;
-
-    public MyKeywordEnricher(ChatModel chatModel) {
-        this.chatModel = chatModel;
-    }
-
-    List<Document> enrichDocuments(List<Document> documents) {
-        KeywordMetadataEnricher enricher = new KeywordMetadataEnricher(this.chatModel, 5);
-        return enricher.apply(documents);
-    }
+//    private final ChatModel chatModel;
+//
+//    public MyKeywordEnricher(ChatModel chatModel) {
+//        this.chatModel = chatModel;
+//    }
+//
+//    List<Document> enrichDocuments(List<Document> documents) {
+//        KeywordMetadataEnricher enricher = new KeywordMetadataEnricher(this.chatModel, 5);
+//        return enricher.apply(documents);
+//    }
 }
