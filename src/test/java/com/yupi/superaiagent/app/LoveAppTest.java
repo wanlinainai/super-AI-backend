@@ -4,14 +4,19 @@ package com.yupi.superaiagent.app;
 import com.yupi.superaiagent.rag.rewriteQueryTransformer.MyRewriteQueryTransformer;
 //import com.yupi.superaiagent.toolCalling.test.WeatherTools;
 
+import com.yupi.superaiagent.tools.WebSearchTool;
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.model.tool.DefaultToolCallingManager;
 import org.springframework.ai.model.tool.ToolCallingChatOptions;
+import org.springframework.ai.model.tool.ToolCallingManager;
+import org.springframework.ai.model.tool.ToolExecutionResult;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbacks;
 import org.springframework.ai.tool.method.MethodToolCallback;
@@ -19,10 +24,8 @@ import org.springframework.ai.tool.support.ToolDefinitions;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.ReflectionUtils;
-
 import java.lang.reflect.Method;
 import java.util.UUID;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
@@ -98,14 +101,30 @@ class LoveAppTest {
 //                .call();
 
         // ToDo： 使用工具
-        // 得到工具对象
-//        ToolCallback[] weatherTools = ToolCallbacks.from(new WeatherTools());
-        // 绑定工具到对象
-//        ChatOptions chatOptions = ToolCallingChatOptions.builder()
-//                .toolCallbacks(weatherTools)
-//                .build();
-        // 构造Prompt指定对话选项
-//        Prompt prompt = new Prompt("今天北京天气怎么样？", chatOptions);
+
+        // 创建工具调用管理器
+        ToolCallingManager toolCallingManager = DefaultToolCallingManager.builder().build();
+//         得到工具对象
+        ToolCallback[] weatherTools = ToolCallbacks.from(new WebSearchTool("*******"));
+//         绑定工具到对象
+        ChatOptions chatOptions = ToolCallingChatOptions.builder()
+                .toolCallbacks(weatherTools)
+                .internalToolExecutionEnabled(false) // 禁用内部工具执行
+                .build();
+//         构造Prompt指定对话选项
+        Prompt prompt = new Prompt("今天北京天气怎么样？", chatOptions);
+
+        // 发送请求给模型
+        ChatResponse chatResponse = dashscopeChatModel.call(prompt);
+        // 手动处理工具调用
+        while (chatResponse.hasToolCalls()) {
+            ToolExecutionResult toolExecutionResult = toolCallingManager.executeToolCalls(prompt, chatResponse);
+            // 创建包含工具调用的新提示
+            prompt = new Prompt(toolExecutionResult.conversationHistory(), chatOptions);
+            // 再次发送请求
+            chatResponse = dashscopeChatModel.call(prompt);
+        }
+
 //        dashscopeChatModel.call(prompt);
     }
 
