@@ -1,11 +1,15 @@
 package com.yupi.superaiagent.config;
 
+import com.yupi.superaiagent.tools.WebSearchTool;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.execution.DefaultToolExecutionExceptionProcessor;
 import org.springframework.ai.tool.execution.ToolExecutionExceptionProcessor;
+import org.springframework.ai.tool.resolution.ToolCallbackResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 /**
  * @author Zhangxh
@@ -30,5 +34,14 @@ public class ToolCallingConfiguration {
                 throw exception;
             }
         };
+    }
+
+    @Bean
+    public ToolCallbackResolver toolCallbackResolver() {
+        HashMap<String, ToolCallback> toolMap = new HashMap<>();
+        toolMap.put("weatherTool", new WeatherToolCallback());
+        toolMap.put("timeTool", new TimeToolCallback());
+
+        return toolName -> toolMap.get(toolName);
     }
 }

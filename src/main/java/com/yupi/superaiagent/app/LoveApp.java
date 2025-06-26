@@ -1,5 +1,6 @@
 package com.yupi.superaiagent.app;
 
+import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatModel;
 import com.alibaba.cloud.ai.dashscope.rag.DashScopeCloudStore;
 import com.fasterxml.jackson.databind.util.PrimitiveArrayBuilder;
 import com.yupi.superaiagent.advisor.MyLoggerAdvisor;
@@ -23,6 +24,8 @@ import org.springframework.ai.document.DefaultContentFormatter;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.document.DocumentReader;
 import org.springframework.ai.document.MetadataMode;
+import org.springframework.ai.model.tool.ToolCallingChatOptions;
+import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.rag.Query;
 import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugmenter;
 import org.springframework.ai.rag.generation.augmentation.QueryAugmenter;
@@ -241,6 +244,12 @@ public class LoveApp {
                 .chatResponse();
         String content = response.getResult().getOutput().getText();
         log.info("content: {}", content);
+
+        String response = ChatClient.create(chatModel)
+                .prompt()
+                .tools("WeatherTool", "TimeTool")
+                .call()
+                .content();
         return content;
     }
 }
